@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ProfileModule } from './profile/profile.module';
 import { VerificationModule } from './verification/verification.module';
 import { InteractionModule } from './interaction/interaction.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { InteractionModule } from './interaction/interaction.module';
     ProfileModule,
     VerificationModule,
     InteractionModule,
+    ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],
