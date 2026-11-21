@@ -156,8 +156,35 @@ class ApiService {
     });
   }
 
-  getSubscription() {
-    return this.request<any>('/payment/subscription');
+  // Admin & Moderation
+  getAdminAnalytics() {
+    return this.request<any>('/admin/analytics');
+  }
+
+  getPendingVerifications(page = 1) {
+    return this.request<any>(`/verification/admin/pending?page=${page}`);
+  }
+
+  reviewVerification(id: string, status: string, rejectionReason?: string) {
+    return this.request<any>(`/verification/admin/${id}/review`, {
+      method: 'POST',
+      body: JSON.stringify({ status, rejectionReason }),
+    });
+  }
+
+  getAdminReports(status?: string, page = 1) {
+    return this.request<any>(`/admin/reports?page=${page}${status ? `&status=${status}` : ''}`);
+  }
+
+  actionReport(id: string, status: string, banUser = false, actionNotes?: string) {
+    return this.request<any>(`/admin/reports/${id}/action`, {
+      method: 'POST',
+      body: JSON.stringify({ status, banUser, actionNotes }),
+    });
+  }
+
+  getAdminAuditLogs(page = 1) {
+    return this.request<any>(`/admin/audit-logs?page=${page}`);
   }
 }
 

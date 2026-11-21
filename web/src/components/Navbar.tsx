@@ -1,9 +1,9 @@
 import React from 'react';
-import { Flame, MessageCircle, User, ShieldCheck, LogOut } from 'lucide-react';
+import { Flame, MessageCircle, User, ShieldCheck, ShieldAlert, LogOut } from 'lucide-react';
 
 interface NavbarProps {
-  currentTab: 'discover' | 'matches' | 'profile';
-  onTabChange: (tab: 'discover' | 'matches' | 'profile') => void;
+  currentTab: 'discover' | 'matches' | 'profile' | 'admin';
+  onTabChange: (tab: 'discover' | 'matches' | 'profile' | 'admin') => void;
   user: any;
   onOpenVerification: () => void;
   onLogout: () => void;
@@ -71,6 +71,21 @@ export const Navbar: React.FC<NavbarProps> = ({
               <User className="w-4 h-4" />
               <span className="hidden sm:inline">Profil</span>
             </button>
+
+            {user.role && user.role !== 'USER' && (
+              <button
+                onClick={() => onTabChange('admin')}
+                className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  currentTab === 'admin'
+                    ? 'bg-red-600 text-white shadow-sm'
+                    : 'text-red-400 hover:text-white'
+                }`}
+                title="Console Administrateur & Modération"
+              >
+                <ShieldAlert className="w-4 h-4" />
+                <span className="hidden sm:inline">Modération</span>
+              </button>
+            )}
           </nav>
         )}
 

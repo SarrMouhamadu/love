@@ -6,11 +6,12 @@ import { DiscoveryView } from './components/DiscoveryView';
 import { ChatView } from './components/ChatView';
 import { ProfileView } from './components/ProfileView';
 import { VerificationModal } from './components/VerificationModal';
+import { AdminView } from './components/AdminView';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentTab, setCurrentTab] = useState<'discover' | 'matches' | 'profile'>('discover');
+  const [currentTab, setCurrentTab] = useState<'discover' | 'matches' | 'profile' | 'admin'>('discover');
   const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
 
   // Modals
@@ -75,6 +76,8 @@ export const App: React.FC = () => {
             currentUser={currentUser}
             initialConversationId={activeConversationId}
           />
+        ) : currentTab === 'admin' ? (
+          <AdminView />
         ) : (
           <ProfileView
             onOpenVerification={() => setShowVerification(true)}
