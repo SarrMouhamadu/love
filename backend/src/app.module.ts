@@ -6,6 +6,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfileModule } from './profile/profile.module';
 import { VerificationModule } from './verification/verification.module';
+import { InteractionModule } from './interaction/interaction.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { VerificationModule } from './verification/verification.module';
     AuthModule,
     ProfileModule,
     VerificationModule,
+    InteractionModule,
   ],
   controllers: [AppController],
   providers: [AppService],
