@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
 import { Flame, AlertCircle } from 'lucide-react';
+import { LegalModal } from './LegalModal';
 
 interface AuthModalProps {
   onSuccess: (user: any) => void;
@@ -15,6 +16,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   const [gender, setGender] = useState<'MALE' | 'FEMALE' | 'OTHER'>('MALE');
   const [city, setCity] = useState('Dakar');
   const [marketingConsent, setMarketingConsent] = useState(false);
+  const [legalModalType, setLegalModalType] = useState<'cgu' | 'privacy' | null>(null);
 
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -191,8 +193,28 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
                 />
                 <span>
                   J accepte les{' '}
-                  <span className="text-zinc-200 underline">Conditions Générales</span> et la{' '}
-                  <span className="text-zinc-200 underline">Politique de Confidentialité</span>.
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLegalModalType('cgu');
+                    }}
+                    className="text-brand-orange hover:underline"
+                  >
+                    Conditions Générales
+                  </button>{' '}
+                  et la{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setLegalModalType('privacy');
+                    }}
+                    className="text-brand-orange hover:underline"
+                  >
+                    Politique de Confidentialité
+                  </button>
+                  .
                 </span>
               </label>
 
@@ -217,6 +239,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           </button>
         </form>
       </div>
+
+      {legalModalType && (
+        <LegalModal type={legalModalType} onClose={() => setLegalModalType(null)} />
+      )}
     </div>
   );
 };

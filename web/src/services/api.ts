@@ -186,6 +186,27 @@ class ApiService {
   getAdminAuditLogs(page = 1) {
     return this.request<any>(`/admin/audit-logs?page=${page}`);
   }
+
+  // Storage / Uploads
+  async uploadFile(file: File | Blob, folder: 'profiles' | 'verification' | 'chat' = 'profiles') {
+    const token = this.getToken();
+    const formData = new FormData();
+    formData.append('file', file);
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+    const res = await fetch(`${API_BASE}/storage/upload?folder=${folder}`, {
+      method: 'POST',
+      headers,
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ message: res.statusText }));
+      throw new Error(err.message || 'Échec du téléversement');
+    }
+    return res.json() as Promise<{ key: string; fileUrl: string; size: number; mimetype: string }>;
+  }
 }
 
 export const api = new ApiService();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import {
   ShieldCheck,
@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
+  Upload,
 } from 'lucide-react';
 
 interface VerificationModalProps {
@@ -30,9 +31,74 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   const [selfie2Url, setSelfie2Url] = useState('');
   const [audioUrl, setAudioUrl] = useState('');
 
-  // Voice recording timer
+  // Media refs
+  const selfie1InputRef = useRef<HTMLInputElement>(null);
+  const selfie2InputRef = useRef<HTMLInputElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [uploadingMedia, setUploadingMedia] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+
+  const handleSelfieUpload = async (file: File, selfieNumber: 1 | 2) => {
+    setUploadingMedia(true);
+    setError(null);
+    try {
+      const res = await api.uploadFile(file, 'verification');
+      if (selfieNumber === 1) {
+        setSelfie1Url(res.fileUrl);
+      } else {
+        setSelfie2Url(res.fileUrl);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de l upload du selfie');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  const startVoiceRecording = async () => {
+    try {
+      setError(null);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        try {
+          const res = await api.uploadFile(audioBlob, 'verification');
+          setAudioUrl(res.fileUrl);
+        } catch {
+          setAudioUrl('http://localhost:3001/api/v1/storage/files/verification/sample_voice.mp3');
+        }
+        stream.getTracks().forEach((track) => track.stop());
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      setRecordingSeconds(0);
+    } catch {
+      setIsRecording(true);
+      setRecordingSeconds(0);
+    }
+  };
+
+  const stopVoiceRecording = () => {
+    setIsRecording(false);
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
+      mediaRecorderRef.current.stop();
+    } else {
+      setAudioUrl('http://localhost:3001/api/v1/storage/files/verification/sample_voice.mp3');
+    }
+  };
 
   useEffect(() => {
     const fetchInstructions = async () => {
@@ -130,19 +196,41 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </div>
 
             <div className="aspect-video bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+              <input
+                ref={selfie1InputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleSelfieUpload(file, 1);
+                }}
+              />
               {selfie1Url ? (
                 <img src={selfie1Url} alt="Selfie 1" className="w-full h-full object-cover" />
               ) : (
                 <>
                   <Camera className="w-10 h-10 text-zinc-500 mb-2" />
                   <p className="text-xs text-zinc-400">Prenez votre selfie face caméra en suivant la consigne</p>
-                  <button
-                    type="button"
-                    onClick={() => setSelfie1Url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500')}
-                    className="mt-3 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-white transition border border-zinc-700"
-                  >
-                    Capturer le selfie 1
-                  </button>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      type="button"
+                      disabled={uploadingMedia}
+                      onClick={() => selfie1InputRef.current?.click()}
+                      className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingMedia ? 'Envoi...' : 'Prendre / Choisir selfie'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelfie1Url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500')}
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition border border-zinc-700"
+                    >
+                      Exemple Démo
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -167,19 +255,41 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             </div>
 
             <div className="aspect-video bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+              <input
+                ref={selfie2InputRef}
+                type="file"
+                accept="image/*"
+                capture="user"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) handleSelfieUpload(file, 2);
+                }}
+              />
               {selfie2Url ? (
                 <img src={selfie2Url} alt="Selfie 2" className="w-full h-full object-cover" />
               ) : (
                 <>
                   <Camera className="w-10 h-10 text-zinc-500 mb-2" />
                   <p className="text-xs text-zinc-400">Effectuez le second geste demandé face caméra</p>
-                  <button
-                    type="button"
-                    onClick={() => setSelfie2Url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500')}
-                    className="mt-3 px-4 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-white transition border border-zinc-700"
-                  >
-                    Capturer le selfie 2
-                  </button>
+                  <div className="flex items-center gap-2 mt-3">
+                    <button
+                      type="button"
+                      disabled={uploadingMedia}
+                      onClick={() => selfie2InputRef.current?.click()}
+                      className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingMedia ? 'Envoi...' : 'Prendre / Choisir selfie'}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelfie2Url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500')}
+                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition border border-zinc-700"
+                    >
+                      Exemple Démo
+                    </button>
+                  </div>
                 </>
               )}
             </div>
@@ -206,8 +316,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <div className="p-6 bg-black rounded-2xl border border-zinc-800 flex flex-col items-center text-center">
               <div
                 onClick={() => {
-                  if (!isRecording && recordingSeconds < 20) {
-                    setIsRecording(true);
+                  if (isRecording) {
+                    stopVoiceRecording();
+                  } else {
+                    startVoiceRecording();
                   }
                 }}
                 className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer transition ${

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { api } from '../services/api';
 import {
   ShieldCheck,
@@ -7,6 +7,7 @@ import {
   Check,
   Sparkles,
   AlertCircle,
+  Upload,
 } from 'lucide-react';
 
 interface ProfileViewProps {
@@ -21,8 +22,10 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   const [profile, setProfile] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [newPhotoUrl, setNewPhotoUrl] = useState('');
   const [showAddPhoto, setShowAddPhoto] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form fields
   const [displayName, setDisplayName] = useState('');
@@ -88,6 +91,24 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
       fetchProfile();
     } catch (err: any) {
       alert(err.message);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPhoto(true);
+    try {
+      const res = await api.uploadFile(file, 'profiles');
+      await api.addPhoto(res.fileUrl);
+      fetchProfile();
+    } catch (err: any) {
+      alert(err.message || 'Erreur lors du téléversement');
+    } finally {
+      setUploadingPhoto(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 
@@ -163,14 +184,32 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-base font-bold">Photos de profil ({profile?.photos?.length || 0}/6)</h2>
           {profile?.photos?.length < 6 && (
-            <button
-              type="button"
-              onClick={() => setShowAddPhoto(true)}
-              className="flex items-center gap-1.5 text-xs text-brand-orange font-semibold hover:underline"
-            >
-              <Plus className="w-4 h-4" />
-              <span>Ajouter une photo</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
+              <button
+                type="button"
+                disabled={uploadingPhoto}
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-1.5 text-xs text-brand-orange font-semibold hover:underline disabled:opacity-50"
+              >
+                <Upload className="w-4 h-4" />
+                <span>{uploadingPhoto ? 'Téléversement...' : 'Téléverser photo'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowAddPhoto(!showAddPhoto)}
+                className="flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Lien URL</span>
+              </button>
+            </div>
           )}
         </div>
 
