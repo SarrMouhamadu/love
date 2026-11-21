@@ -1,0 +1,465 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ----------------------------------------------------
+// ENUMS
+// ----------------------------------------------------
+
+enum UserRole {
+  USER
+  MODERATOR
+  VERIFIER
+  SUPPORT
+  ANALYST
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  SUSPENDED
+  BLOCKED
+  DELETED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum VerificationStatus {
+  NONE
+  PENDING
+  VERIFIED
+  REJECTED
+  NEEDS_RESUBMISSION
+}
+
+enum MediaType {
+  SELFIE_INSTRUCTION_1
+  SELFIE_INSTRUCTION_2
+  VOICE_RECORDING
+}
+
+enum SubscriptionTier {
+  FREE
+  PREMIUM
+}
+
+enum PaymentProvider {
+  WAVE
+  ORANGE_MONEY
+  APPLE_STOREKIT
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  REFUNDED
+  CANCELLED
+}
+
+enum ReportReason {
+  FAKE_PROFILE
+  IMPERSONATION
+  SCAM
+  HARASSMENT
+  INAPPROPRIATE_CONTENT
+  UNDERAGE
+  SPAM
+  OTHER
+}
+
+enum ReportStatus {
+  PENDING
+  REVIEWED
+  DISMISSED
+  ACTIONED
+}
+
+// ----------------------------------------------------
+// USERS & AUTHENTICATION
+// ----------------------------------------------------
+
+model User {
+  id                 String             @id @default(uuid())
+  email              String             @unique
+  passwordHash       String
+  role               UserRole           @default(USER)
+  status             UserStatus         @default(ACTIVE)
+  isVerified         Boolean            @default(false)
+  isPremium          Boolean            @default(false)
+  premiumExpiresAt   DateTime?
+  termsAcceptedAt    DateTime           @default(now())
+  privacyAcceptedAt  DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  // Relations
+  profile            Profile?
+  sessions           UserSession[]
+  verificationRequests VerificationRequest[]
+  likesSent          Like[]             @relation("LikesSent")
+  likesReceived      Like[]             @relation("LikesReceived")
+  passesSent         Pass[]             @relation("PassesSent")
+  matches1           Match[]            @relation("MatchUser1")
+  matches2           Match[]            @relation("MatchUser2")
+  messagesSent       Message[]
+  blocksGiven        Block[]            @relation("Blocker")
+  blocksReceived     Block[]            @relation("Blocked")
+  reportsGiven       Report[]           @relation("Reporter")
+  reportsReceived    Report[]           @relation("Reported")
+  subscriptions      Subscription[]
+  payments           Payment[]
+  notifications      Notification[]
+  notificationPref   NotificationPreference?
+  marketingConsent   MarketingConsent?
+  auditLogsTriggered AuditLog[]         @relation("AdminAudit")
+
+  @@index([email])
+  @@index([status])
+  @@index([role])
+}
+
+model UserSession {
+  id           String    @id @default(uuid())
+  userId       String
+  tokenHash    String    @unique
+  deviceInfo   String?
+  ipAddress    String?
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+  revokedAt    DateTime?
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+// ----------------------------------------------------
+// PROFILES & PREFERENCES
+// ----------------------------------------------------
+
+model Profile {
+  id                 String         @id @default(uuid())
+  userId             String         @unique
+  displayName        String
+  birthDate          DateTime
+  gender             Gender
+  city               String         @default("Dakar")
+  bio                String?        @db.Text
+  profession         String?
+  education          String?
+  lookingFor         String?
+  latitude           Float?
+  longitude          Float?
+  incognitoMode      Boolean        @default(false)
+  searchMinAge       Int            @default(18)
+  searchMaxAge       Int            @default(99)
+  searchGender       Gender?
+  searchMaxDistanceKm Int           @default(50)
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+
+  user               User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  photos             ProfilePhoto[]
+  interests          UserInterest[]
+
+  @@index([city])
+  @@index([gender])
+}
+
+model ProfilePhoto {
+  id         String   @id @default(uuid())
+  profileId  String
+  url        String
+  order      Int      @default(0)
+  isMain     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+}
+
+model Interest {
+  id        String         @id @default(uuid())
+  name      String         @unique
+  category  String         @default("general")
+  users     UserInterest[]
+}
+
+model UserInterest {
+  profileId  String
+  interestId String
+
+  profile    Profile  @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  interest   Interest @relation(fields: [interestId], references: [id], onDelete: Cascade)
+
+  @@id([profileId, interestId])
+}
+
+// ----------------------------------------------------
+// VERIFICATION (ANTI-FAKE)
+// ----------------------------------------------------
+
+model VerificationRequest {
+  id              String             @id @default(uuid())
+  userId          String
+  status          VerificationStatus @default(PENDING)
+  rejectionReason String?
+  reviewedById    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  user            User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media           VerificationMedia[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model VerificationMedia {
+  id              String             @id @default(uuid())
+  requestId       String
+  type            MediaType
+  fileUrl         String
+  instructionText String?
+  createdAt       DateTime           @default(now())
+
+  request         VerificationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  @@index([requestId])
+}
+
+// ----------------------------------------------------
+// DISCOVERY, LIKES & MATCHES
+// ----------------------------------------------------
+
+model Like {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+
+  fromUser   User     @relation("LikesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser     User     @relation("LikesReceived", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+  @@index([toUserId])
+}
+
+model Pass {
+  id         String   @id @default(uuid())
+  fromUserId String
+  toUserId   String
+  createdAt  DateTime @default(now())
+
+  fromUser   User     @relation("PassesSent", fields: [fromUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([fromUserId])
+}
+
+model Match {
+  id           String        @id @default(uuid())
+  user1Id      String
+  user2Id      String
+  isActive     Boolean       @default(true)
+  createdAt    DateTime      @default(now())
+
+  user1        User          @relation("MatchUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2        User          @relation("MatchUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  conversation Conversation?
+
+  @@unique([user1Id, user2Id])
+  @@index([user1Id])
+  @@index([user2Id])
+}
+
+// ----------------------------------------------------
+// MESSAGING & CHAT
+// ----------------------------------------------------
+
+model Conversation {
+  id           String      @id @default(uuid())
+  matchId      String      @unique
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  match        Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  messages     Message[]
+}
+
+model Message {
+  id             String              @id @default(uuid())
+  conversationId String
+  senderId       String
+  content        String?             @db.Text
+  isRead         Boolean             @default(false)
+  readAt         DateTime?
+  createdAt      DateTime            @default(now())
+
+  conversation   Conversation        @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User                @relation(fields: [senderId], references: [id], onDelete: Cascade)
+  attachments    MessageAttachment[]
+
+  @@index([conversationId])
+  @@index([senderId])
+}
+
+model MessageAttachment {
+  id        String   @id @default(uuid())
+  messageId String
+  fileUrl   String
+  fileType  String   // image, audio
+  duration  Int?     // For voice notes in seconds
+  createdAt DateTime @default(now())
+
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+}
+
+// ----------------------------------------------------
+// SAFETY, BLOCKING & MODERATION
+// ----------------------------------------------------
+
+model Block {
+  id          String   @id @default(uuid())
+  blockerId   String
+  blockedId   String
+  createdAt   DateTime @default(now())
+
+  blocker     User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blocked     User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+
+  @@unique([blockerId, blockedId])
+  @@index([blockerId])
+}
+
+model Report {
+  id          String       @id @default(uuid())
+  reporterId  String
+  reportedId  String
+  reason      ReportReason
+  details     String?      @db.Text
+  status      ReportStatus @default(PENDING)
+  actionNotes String?      @db.Text
+  handledById String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  reporter    User         @relation("Reporter", fields: [reporterId], references: [id], onDelete: Cascade)
+  reported    User         @relation("Reported", fields: [reportedId], references: [id], onDelete: Cascade)
+
+  @@index([reporterId])
+  @@index([reportedId])
+  @@index([status])
+}
+
+// ----------------------------------------------------
+// MONETIZATION & PAYMENTS
+// ----------------------------------------------------
+
+model Subscription {
+  id        String           @id @default(uuid())
+  userId    String
+  tier      SubscriptionTier @default(PREMIUM)
+  priceXof  Int              @default(500)
+  startDate DateTime         @default(now())
+  endDate   DateTime
+  isActive  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Payment {
+  id              String          @id @default(uuid())
+  userId          String
+  provider        PaymentProvider
+  externalTxId    String?         @unique
+  amountXof       Int             @default(500)
+  status          PaymentStatus   @default(PENDING)
+  metadata        Json?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  user            User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([status])
+}
+
+// ----------------------------------------------------
+// NOTIFICATIONS & AUDIT
+// ----------------------------------------------------
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  body      String
+  type      String   // LIKE, MATCH, MESSAGE, VERIFICATION, PAYMENT
+  data      Json?
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model NotificationPreference {
+  id               String  @id @default(uuid())
+  userId           String  @unique
+  newLikes         Boolean @default(true)
+  newMatches       Boolean @default(true)
+  newMessages      Boolean @default(true)
+  promotions       Boolean @default(false)
+
+  user             User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MarketingConsent {
+  id               String   @id @default(uuid())
+  userId           String   @unique
+  consentGiven     Boolean  @default(false)
+  consentedAt      DateTime?
+  updatedAt        DateTime @updatedAt
+
+  user             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  adminUserId  String
+  action       String   // VIEW_SENSITIVE_DATA, APPROVE_VERIFICATION, BAN_USER, etc.
+  targetEntity String   // USER, MESSAGE, VERIFICATION
+  targetId     String?
+  ipAddress    String?
+  details      Json?
+  createdAt    DateTime @default(now())
+
+  adminUser    User     @relation("AdminAudit", fields: [adminUserId], references: [id], onDelete: Cascade)
+
+  @@index([adminUserId])
+  @@index([targetEntity])
+  @@index([createdAt])
+}
