@@ -6,7 +6,6 @@ import { DiscoveryView } from './components/DiscoveryView';
 import { ChatView } from './components/ChatView';
 import { ProfileView } from './components/ProfileView';
 import { VerificationModal } from './components/VerificationModal';
-import { PremiumModal } from './components/PremiumModal';
 
 export const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
@@ -16,7 +15,6 @@ export const App: React.FC = () => {
 
   // Modals
   const [showVerification, setShowVerification] = useState(false);
-  const [showPremium, setShowPremium] = useState(false);
 
   const checkAuth = async () => {
     try {
@@ -57,7 +55,6 @@ export const App: React.FC = () => {
         }}
         user={currentUser}
         onOpenVerification={() => setShowVerification(true)}
-        onOpenPremium={() => setShowPremium(true)}
         onLogout={handleLogout}
       />
 
@@ -68,7 +65,6 @@ export const App: React.FC = () => {
         ) : currentTab === 'discover' ? (
           <DiscoveryView
             user={currentUser}
-            onOpenPremium={() => setShowPremium(true)}
             onOpenChat={(convId) => {
               setActiveConversationId(convId);
               setCurrentTab('matches');
@@ -82,7 +78,6 @@ export const App: React.FC = () => {
         ) : (
           <ProfileView
             onOpenVerification={() => setShowVerification(true)}
-            onOpenPremium={() => setShowPremium(true)}
             onProfileUpdated={checkAuth}
           />
         )}
@@ -92,14 +87,6 @@ export const App: React.FC = () => {
       {showVerification && (
         <VerificationModal
           onClose={() => setShowVerification(false)}
-          onSuccess={checkAuth}
-        />
-      )}
-
-      {/* Premium Upgrade Modal */}
-      {showPremium && (
-        <PremiumModal
-          onClose={() => setShowPremium(false)}
           onSuccess={checkAuth}
         />
       )}

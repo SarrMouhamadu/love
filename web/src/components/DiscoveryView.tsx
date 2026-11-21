@@ -13,13 +13,11 @@ import {
 } from 'lucide-react';
 
 interface DiscoveryViewProps {
-  onOpenPremium: () => void;
   onOpenChat: (conversationId: string) => void;
   user: any;
 }
 
 export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
-  onOpenPremium,
   onOpenChat,
   user,
 }) => {
@@ -65,11 +63,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       }
       nextProfile();
     } catch (err: any) {
-      if (err.message && err.message.includes('limite')) {
-        onOpenPremium();
-      } else {
-        alert(err.message);
-      }
+      alert(err.message || 'Une erreur est survenue');
     }
   };
 
@@ -86,10 +80,6 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
   };
 
   const handleRewind = async () => {
-    if (!user.isPremium) {
-      onOpenPremium();
-      return;
-    }
     if (!lastPassedId) return;
 
     try {

@@ -1,12 +1,11 @@
 import React from 'react';
-import { Flame, MessageCircle, User, ShieldCheck, Crown, LogOut } from 'lucide-react';
+import { Flame, MessageCircle, User, ShieldCheck, LogOut } from 'lucide-react';
 
 interface NavbarProps {
   currentTab: 'discover' | 'matches' | 'profile';
   onTabChange: (tab: 'discover' | 'matches' | 'profile') => void;
   user: any;
   onOpenVerification: () => void;
-  onOpenPremium: () => void;
   onLogout: () => void;
 }
 
@@ -15,7 +14,6 @@ export const Navbar: React.FC<NavbarProps> = ({
   onTabChange,
   user,
   onOpenVerification,
-  onOpenPremium,
   onLogout,
 }) => {
   return (
@@ -97,21 +95,6 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </button>
               )}
 
-              {/* Premium Button */}
-              {user.isPremium ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full text-xs font-semibold">
-                  <Crown className="w-3.5 h-3.5" />
-                  <span>PREMIUM</span>
-                </div>
-              ) : (
-                <button
-                  onClick={onOpenPremium}
-                  className="flex items-center gap-1.5 px-3.5 py-1 bg-gradient-to-r from-amber-500 to-brand-orange hover:opacity-90 text-white rounded-full text-xs font-bold shadow-sm transition"
-                >
-                  <Crown className="w-3.5 h-3.5" />
-                  <span>Passer Premium</span>
-                </button>
-              )}
 
               {/* Logout Button */}
               <button

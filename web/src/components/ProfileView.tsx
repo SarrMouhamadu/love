@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import {
   ShieldCheck,
-  Crown,
   Plus,
   Trash2,
   Check,
@@ -12,13 +11,11 @@ import {
 
 interface ProfileViewProps {
   onOpenVerification: () => void;
-  onOpenPremium: () => void;
   onProfileUpdated: () => void;
 }
 
 export const ProfileView: React.FC<ProfileViewProps> = ({
   onOpenVerification,
-  onOpenPremium,
   onProfileUpdated,
 }) => {
   const [profile, setProfile] = useState<any | null>(null);
@@ -156,22 +153,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             >
               <ShieldCheck className="w-4 h-4 text-brand-orange" />
               <span>Vérifier mon profil</span>
-            </button>
-          )}
-
-          {/* Premium Status */}
-          {isPremium ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full text-xs font-semibold">
-              <Crown className="w-4 h-4" />
-              <span>Membre Premium</span>
-            </div>
-          ) : (
-            <button
-              onClick={onOpenPremium}
-              className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-brand-orange text-white rounded-full text-xs font-bold transition hover:opacity-90"
-            >
-              <Crown className="w-4 h-4" />
-              <span>Passer Premium</span>
             </button>
           )}
         </div>
@@ -322,7 +303,6 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <div>
             <div className="flex items-center gap-1.5 text-sm font-semibold text-white">
               <span>Mode Incognito</span>
-              <Crown className="w-3.5 h-3.5 text-amber-400" />
             </div>
             <p className="text-xs text-zinc-400 mt-0.5">
               Votre profil ne sera visible que par les personnes que vous avez vous-même likées.
@@ -332,12 +312,11 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           <label className="relative inline-flex items-center cursor-pointer">
             <input
               type="checkbox"
-              disabled={!isPremium}
               checked={incognitoMode}
               onChange={(e) => setIncognitoMode(e.target.checked)}
               className="sr-only peer"
             />
-            <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange disabled:opacity-30"></div>
+            <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-zinc-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-orange"></div>
           </label>
         </div>
 

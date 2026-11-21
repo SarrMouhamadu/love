@@ -47,11 +47,12 @@ export class AuthService {
     // 3. Hash password
     const passwordHash = await bcrypt.hash(dto.password, 12);
 
-    // 4. Create user and profile in a transaction
+    // 4. Create user and profile in a transaction (All features fully accessible in MVP)
     const user = await this.prisma.user.create({
       data: {
         email: dto.email.toLowerCase(),
         passwordHash,
+        isPremium: true,
         profile: {
           create: {
             displayName: dto.displayName.trim(),

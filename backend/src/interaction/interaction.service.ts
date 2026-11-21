@@ -153,23 +153,7 @@ export class InteractionService {
       throw new NotFoundException('Utilisateur cible introuvable');
     }
 
-    // Check freemium limit for non-premium users
-    if (!currentUser.isPremium) {
-      const past24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
-      const likesCount = await this.prisma.like.count({
-        where: {
-          fromUserId: currentUserId,
-          createdAt: { gte: past24h },
-        },
-      });
-
-      if (likesCount >= FREE_USER_DAILY_LIKE_LIMIT) {
-        throw new ForbiddenException(
-          `Vous avez atteint votre limite quotidienne de ${FREE_USER_DAILY_LIKE_LIMIT} likes. Passez à Anonyme Pro Premium pour des likes illimités !`,
-        );
-      }
-    }
-
+    // In MVP, likes are unlimited for all users
     // Upsert like
     await this.prisma.like.upsert({
       where: {
@@ -272,10 +256,8 @@ export class InteractionService {
       where: { id: currentUserId },
     });
 
-    if (!user || !user.isPremium) {
-      throw new ForbiddenException(
-        'L annulation d un passage (Rewind) est une fonctionnalité réservée aux membres Premium',
-      );
+    if (!user) {
+      throw new NotFoundException('Utilisateur introuvable');
     }
 
     const pass = await this.prisma.pass.findUnique({
@@ -360,17 +342,7 @@ export class InteractionService {
       where: { toUserId: currentUserId },
     });
 
-    // If Free: show blurred count and teaser
-    if (!user.isPremium) {
-      return {
-        totalLikes,
-        isPremium: false,
-        message: 'Débloquez Anonyme Pro Premium pour découvrir qui a aimé votre profil !',
-        profiles: [],
-      };
-    }
-
-    // If Premium: show full list of admirers
+    // In MVP: show full list of admirers to all users
     const likes = await this.prisma.like.findMany({
       where: { toUserId: currentUserId },
       orderBy: { createdAt: 'desc' },

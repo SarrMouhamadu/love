@@ -51,13 +51,7 @@ export class ProfileService {
       throw new NotFoundException('Profil introuvable');
     }
 
-    // Incognito mode is a Premium feature
-    if (dto.incognitoMode === true && !user.isPremium) {
-      throw new ForbiddenException(
-        'Le mode incognito est réservé aux membres Anonyme Pro Premium',
-      );
-    }
-
+    // In MVP, incognito mode is accessible to all users
     const updated = await this.prisma.profile.update({
       where: { userId },
       data: {
