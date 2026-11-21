@@ -285,7 +285,7 @@ export const ChatView: React.FC<ChatViewProps> = ({
                       <div
                         className={`max-w-[75%] rounded-2xl px-4 py-2.5 text-sm ${
                           isMe
-                            ? 'bg-brand-orange text-white rounded-br-xs'
+                            ? 'bg-blue-600 text-white rounded-br-xs shadow-xs'
                             : 'bg-zinc-800 text-zinc-100 rounded-bl-xs'
                         }`}
                       >
@@ -378,14 +378,14 @@ export const ChatView: React.FC<ChatViewProps> = ({
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
                   placeholder="Écrivez un message..."
-                  className="flex-1 px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-brand-orange transition"
+                  className="flex-1 px-4 py-2.5 bg-zinc-950 border border-zinc-800 rounded-xl text-white text-sm focus:outline-none focus:border-blue-500 transition"
                 />
               )}
 
               <button
                 type="submit"
                 disabled={!inputText.trim()}
-                className="p-2.5 bg-brand-orange hover:bg-brand-orange-hover text-white rounded-xl transition disabled:opacity-30 disabled:hover:bg-brand-orange"
+                className="p-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl transition disabled:opacity-30 disabled:hover:bg-blue-600 shadow-sm shadow-blue-500/20"
               >
                 <Send className="w-4 h-4" />
               </button>

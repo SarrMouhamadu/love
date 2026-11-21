@@ -1,5 +1,6 @@
 import React from 'react';
-import { Flame, MessageCircle, User, ShieldCheck, ShieldAlert, LogOut } from 'lucide-react';
+import { Compass, MessageCircle, User, ShieldCheck, ShieldAlert, LogOut } from 'lucide-react';
+import { Logo } from './Logo';
 
 interface NavbarProps {
   currentTab: 'discover' | 'matches' | 'profile' | 'admin';
@@ -22,15 +23,9 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Logo */}
         <div
           onClick={() => onTabChange('discover')}
-          className="flex items-center gap-2 cursor-pointer select-none"
+          className="cursor-pointer"
         >
-          <div className="w-9 h-9 rounded-xl bg-brand-orange flex items-center justify-center shadow-lg shadow-brand-orange/20">
-            <Flame className="w-5 h-5 text-white fill-white" />
-          </div>
-          <div>
-            <span className="font-bold text-lg tracking-tight">ANONYME</span>
-            <span className="text-brand-orange font-bold text-lg ml-1">PRO</span>
-          </div>
+          <Logo size="md" />
         </div>
 
         {/* Navigation Tabs */}
@@ -40,11 +35,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onTabChange('discover')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 currentTab === 'discover'
-                  ? 'bg-brand-orange text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Flame className="w-4 h-4" />
+              <Compass className="w-4 h-4" />
               <span className="hidden sm:inline">Découvrir</span>
             </button>
 
@@ -52,7 +47,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onTabChange('matches')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 currentTab === 'matches'
-                  ? 'bg-brand-orange text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
@@ -64,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               onClick={() => onTabChange('profile')}
               className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
                 currentTab === 'profile'
-                  ? 'bg-brand-orange text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >

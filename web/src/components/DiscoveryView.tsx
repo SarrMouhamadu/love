@@ -265,7 +265,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
         {/* Like */}
         <button
           onClick={handleLike}
-          className="w-16 h-16 rounded-full bg-gradient-to-tr from-brand-orange to-amber-500 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition shadow-xl shadow-brand-orange/30"
+          className="w-16 h-16 rounded-full bg-gradient-to-tr from-blue-600 via-blue-500 to-indigo-600 flex items-center justify-center text-white hover:scale-105 active:scale-95 transition shadow-xl shadow-blue-500/30 ring-2 ring-white/20"
           title="J aime"
         >
           <Heart className="w-8 h-8 fill-white" />
@@ -275,8 +275,8 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
       {/* MATCH POPUP CELEBRATION */}
       {matchData && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4 animate-in fade-in duration-200">
-          <div className="w-full max-w-sm bg-zinc-950 border border-brand-orange/50 rounded-3xl p-6 text-center shadow-2xl relative">
-            <div className="w-16 h-16 bg-brand-orange/20 border border-brand-orange rounded-full flex items-center justify-center mx-auto mb-4 text-brand-orange">
+          <div className="w-full max-w-sm bg-zinc-950 border border-blue-500/40 rounded-3xl p-6 text-center shadow-2xl relative">
+            <div className="w-16 h-16 bg-blue-500/20 border border-blue-500 rounded-full flex items-center justify-center mx-auto mb-4 text-blue-400">
               <Sparkles className="w-8 h-8" />
             </div>
 
@@ -293,7 +293,7 @@ export const DiscoveryView: React.FC<DiscoveryViewProps> = ({
                   setMatchData(null);
                   onOpenChat(convId);
                 }}
-                className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-brand-orange/20 transition"
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl flex items-center justify-center gap-2 shadow-lg shadow-blue-500/25 transition"
               >
                 <MessageCircle className="w-4 h-4" />
                 <span>Envoyer un message</span>

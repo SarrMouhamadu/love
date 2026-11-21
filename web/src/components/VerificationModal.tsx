@@ -352,7 +352,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <button
               disabled={!audioUrl || submitting}
               onClick={handleSubmit}
-              className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold rounded-xl transition shadow-lg shadow-brand-orange/20 disabled:opacity-40"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25 disabled:opacity-40"
             >
               {submitting ? 'Transmission sécurisée...' : 'Soumettre mon dossier de vérification'}
             </button>

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
-import { Flame, AlertCircle } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
+import { Logo } from './Logo';
 import { LegalModal } from './LegalModal';
 
 interface AuthModalProps {
@@ -55,8 +56,8 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
     <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl">
         <div className="text-center mb-6">
-          <div className="w-12 h-12 bg-brand-orange rounded-2xl mx-auto flex items-center justify-center mb-3 shadow-lg shadow-brand-orange/30">
-            <Flame className="w-7 h-7 text-white fill-white" />
+          <div className="flex justify-center mb-4">
+            <Logo size="lg" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight">
             {isLogin ? 'Bon retour parmi nous' : 'Créer votre compte'}
@@ -233,7 +234,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold rounded-xl transition-all shadow-lg shadow-brand-orange/20 mt-4 disabled:opacity-50"
+            className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all shadow-lg shadow-blue-600/30 mt-4 disabled:opacity-50"
           >
             {loading ? 'Chargement...' : isLogin ? 'Se connecter' : 'Créer mon compte'}
           </button>

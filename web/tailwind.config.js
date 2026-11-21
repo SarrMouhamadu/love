@@ -6,12 +6,17 @@ export default {
     extend: {
       colors: {
         brand: {
-          orange: '#FF5E1E',
-          'orange-hover': '#E04A0D',
-          dark: '#0A0A0C',
-          card: '#141418',
-          border: '#24242C',
-          muted: '#8E8E93',
+          blue: '#0066FF',
+          'blue-hover': '#0052CC',
+          'blue-light': '#38BDF8',
+          primary: '#0066FF',
+          'primary-hover': '#0052CC',
+          orange: '#0066FF', // aliased for smooth migration
+          'orange-hover': '#0052CC',
+          dark: '#07090E',
+          card: '#0E131F',
+          border: '#1E293B',
+          muted: '#94A3B8',
         },
       },
       fontFamily: {
