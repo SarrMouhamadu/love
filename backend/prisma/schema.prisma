@@ -55,6 +55,7 @@ enum SubscriptionTier {
 }
 
 enum PaymentProvider {
+  NABOOPAY
   WAVE
   ORANGE_MONEY
   APPLE_STOREKIT

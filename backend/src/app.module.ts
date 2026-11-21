@@ -8,6 +8,7 @@ import { ProfileModule } from './profile/profile.module';
 import { VerificationModule } from './verification/verification.module';
 import { InteractionModule } from './interaction/interaction.module';
 import { ChatModule } from './chat/chat.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { ChatModule } from './chat/chat.module';
     VerificationModule,
     InteractionModule,
     ChatModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
