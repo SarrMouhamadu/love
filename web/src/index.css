@@ -8,6 +8,35 @@
   }
 }
 
+/* Apple-style smooth glassmorphic & glowing utility effects */
+.glass-panel {
+  background: rgba(14, 19, 31, 0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.glow-btn {
+  position: relative;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glow-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  background: linear-gradient(90deg, #0066FF, #38BDF8, #0066FF);
+  border-radius: inherit;
+  z-index: -1;
+  filter: blur(10px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.glow-btn:hover::before {
+  opacity: 0.75;
+}
+
 /* Custom scrollbars */
 ::-webkit-scrollbar {
   width: 6px;

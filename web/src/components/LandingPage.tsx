@@ -69,15 +69,18 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
           2. HERO SECTION
       ========================================================================= */}
       <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden">
-        {/* Glow behind hero */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[300px] bg-blue-600/15 blur-[140px] pointer-events-none rounded-full" />
+        {/* Animated glowing orbs / blobs */}
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[650px] h-[350px] bg-blue-600/15 blur-[140px] pointer-events-none rounded-full animate-pulse-glow" />
+        <div className="absolute top-1/3 left-1/4 w-[300px] h-[300px] bg-sky-500/10 blur-[120px] pointer-events-none rounded-full animate-blob" />
+        <div className="absolute top-1/2 right-1/4 w-[280px] h-[280px] bg-blue-700/10 blur-[130px] pointer-events-none rounded-full animate-blob" style={{ animationDelay: '3s' }} />
 
         <div className="max-w-6xl mx-auto px-4 relative z-10">
-          {/* Top Pill */}
+          {/* Top Pill with Shimmer effect */}
           <div className="flex justify-center mb-6">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/25 text-blue-400 text-xs font-semibold shadow-xs">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>N°1 des rencontres authentiques & vérifiées à Dakar</span>
+            <div className="relative overflow-hidden inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-xs font-semibold shadow-sm backdrop-blur-md">
+              <span className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-400/15 to-transparent animate-shimmer" />
+              <Sparkles className="w-3.5 h-3.5 relative z-10 text-blue-400" />
+              <span className="relative z-10">N°1 des rencontres authentiques & vérifiées à Dakar</span>
             </div>
           </div>
 
@@ -85,7 +88,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
           <div className="text-center max-w-3xl mx-auto">
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold tracking-tight leading-[1.1] text-white">
               Rencontrez de vraies personnes.{' '}
-              <span className="bg-gradient-to-r from-blue-400 to-sky-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-blue-400 via-sky-300 to-blue-500 bg-clip-text text-transparent">
                 En toute authenticité.
               </span>
             </h1>
@@ -99,14 +102,14 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={() => onOpenAuth('register')}
-                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-full shadow-xl shadow-blue-500/30 transition active:scale-95 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto px-8 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-full shadow-xl shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-2 glow-btn"
               >
                 <span>Créer mon profil gratuitement</span>
-                <ArrowRight className="w-4 h-4" />
+                <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
               </button>
               <button
                 onClick={() => onOpenAuth('login')}
-                className="w-full sm:w-auto px-6 py-3.5 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white font-semibold text-sm rounded-full border border-zinc-800 transition"
+                className="w-full sm:w-auto px-6 py-3.5 bg-zinc-900/90 hover:bg-zinc-800 text-zinc-300 hover:text-white font-semibold text-sm rounded-full border border-zinc-800 hover:border-zinc-700 transition duration-200"
               >
                 J’ai déjà un compte
               </button>
@@ -136,8 +139,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
           ========================================================================= */}
           <div className="mt-14 relative max-w-4xl mx-auto">
             {/* Ambient card glowing frame */}
-            <div className="relative rounded-3xl overflow-hidden border border-zinc-800 bg-zinc-950/70 shadow-2xl p-2 sm:p-3">
-              <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-zinc-900">
+            <div className="relative rounded-3xl overflow-hidden border border-zinc-800/90 bg-zinc-950/70 shadow-2xl p-2 sm:p-3 backdrop-blur-sm">
+              <div className="relative aspect-[16/9] w-full rounded-2xl overflow-hidden bg-zinc-900 group">
                 <img
                   src="/assets/hero.jpg"
                   onError={(e) => {
@@ -146,20 +149,21 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
                       'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=1600&auto=format&fit=crop&q=80';
                   }}
                   alt="Anonyme Pro Dakar Community"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.02]"
                 />
 
                 {/* Gradient overlay for readability */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-                {/* Floating Glassmorphic Badge 1: Verified Member */}
-                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 p-3 sm:p-4 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-blue-500/40">
+                {/* Floating Glassmorphic Badge 1: Verified Member (Smooth Apple Float) */}
+                <div className="absolute top-4 left-4 sm:top-6 sm:left-6 p-3 sm:p-4 rounded-2xl bg-black/65 backdrop-blur-xl border border-white/15 shadow-2xl flex items-center gap-3 animate-float transition-transform duration-300 hover:scale-105">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden border border-blue-500/40 relative">
                     <img
                       src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200"
                       alt="Fatou"
                       className="w-full h-full object-cover"
                     />
+                    <div className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border border-black" />
                   </div>
                   <div>
                     <div className="flex items-center gap-1.5">
@@ -170,22 +174,50 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
                   </div>
                 </div>
 
-                {/* Floating Glassmorphic Badge 2: Match alert */}
-                <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 p-3 sm:p-4 rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center gap-3 animate-bounce">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/30">
+                {/* Floating Glassmorphic Badge 2: Match alert (Smooth Apple Float Reverse) */}
+                <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 p-3 sm:p-4 rounded-2xl bg-black/65 backdrop-blur-xl border border-white/15 shadow-2xl flex items-center gap-3 animate-float-reverse transition-transform duration-300 hover:scale-105">
+                  <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-sky-400 flex items-center justify-center text-white shadow-lg shadow-blue-500/40">
                     <Heart className="w-5 h-5 fill-white" />
                   </div>
                   <div>
                     <span className="font-bold text-xs sm:text-sm text-white block">C’est un Match !</span>
-                    <p className="text-[10px] text-zinc-300">Vous avez un intérêt mutuel</p>
+                    <p className="text-[10px] text-zinc-300">Intérêt mutuel instantané</p>
                   </div>
                 </div>
 
                 {/* Center Badge: Dakar */}
-                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/50 backdrop-blur-md border border-white/10 text-xs text-zinc-300">
+                <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md border border-white/10 text-xs text-zinc-300">
                   <MapPin className="w-3.5 h-3.5 text-blue-400" />
                   <span>Dakar & Régions • Sénégal</span>
                 </div>
+              </div>
+            </div>
+
+            {/* Metrics Ribbon */}
+            <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
+              <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm text-center hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-white block bg-gradient-to-r from-blue-400 to-white bg-clip-text text-transparent">
+                  1 500+
+                </span>
+                <span className="text-[11px] text-zinc-400 font-medium">Membres à Dakar</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm text-center hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-blue-400 block">
+                  100%
+                </span>
+                <span className="text-[11px] text-zinc-400 font-medium">Profils Vérifiés</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm text-center hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-white block">
+                  &lt; 2h
+                </span>
+                <span className="text-[11px] text-zinc-400 font-medium">Délai validation</span>
+              </div>
+              <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 backdrop-blur-sm text-center hover:border-blue-500/30 transition-all duration-300 hover:-translate-y-1">
+                <span className="text-2xl sm:text-3xl font-extrabold text-blue-400 block">
+                  0 FCFA
+                </span>
+                <span className="text-[11px] text-zinc-400 font-medium">100% Gratuit Lancement</span>
               </div>
             </div>
           </div>
@@ -212,8 +244,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
             {/* Card 1 */}
-            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/40 transition group">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 transition">
+            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/50 hover:bg-zinc-900/90 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-600/20 group-hover:border-blue-500/50 transition-all duration-300">
                 <ShieldCheck className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-white mb-2">Vérification Anti-Fake</h3>
@@ -224,8 +256,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
             </div>
 
             {/* Card 2 */}
-            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/40 transition group">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 transition">
+            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/50 hover:bg-zinc-900/90 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-600/20 group-hover:border-blue-500/50 transition-all duration-300">
                 <Lock className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-white mb-2">Vie Privée Protégée</h3>
@@ -236,8 +268,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
             </div>
 
             {/* Card 3 */}
-            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/40 transition group">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 transition">
+            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/50 hover:bg-zinc-900/90 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-600/20 group-hover:border-blue-500/50 transition-all duration-300">
                 <SlidersHorizontal className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-white mb-2">Ancrage Local Dakar</h3>
@@ -248,8 +280,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onOpenAuth }) => {
             </div>
 
             {/* Card 4 */}
-            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/40 transition group">
-              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 transition">
+            <div className="p-6 bg-zinc-900/60 border border-zinc-800 rounded-3xl hover:border-blue-500/50 hover:bg-zinc-900/90 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-500/10 transition-all duration-300 group">
+              <div className="w-12 h-12 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-5 group-hover:scale-110 group-hover:bg-blue-600/20 group-hover:border-blue-500/50 transition-all duration-300">
                 <Sparkles className="w-6 h-6" />
               </div>
               <h3 className="font-bold text-base text-white mb-2">100% Gratuit pour le MVP</h3>
