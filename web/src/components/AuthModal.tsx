@@ -1,15 +1,21 @@
 import React, { useState } from 'react';
 import { api } from '../services/api';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, X } from 'lucide-react';
 import { Logo } from './Logo';
 import { LegalModal } from './LegalModal';
 
 interface AuthModalProps {
+  initialMode?: 'login' | 'register';
+  onClose?: () => void;
   onSuccess: (user: any) => void;
 }
 
-export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
-  const [isLogin, setIsLogin] = useState(true);
+export const AuthModal: React.FC<AuthModalProps> = ({
+  initialMode = 'login',
+  onClose,
+  onSuccess,
+}) => {
+  const [isLogin, setIsLogin] = useState(initialMode === 'login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
@@ -53,8 +59,25 @@ export const AuthModal: React.FC<AuthModalProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8">
-      <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl">
+    <div
+      className={
+        onClose
+          ? 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4 py-6 overflow-y-auto animate-in fade-in duration-200'
+          : 'min-h-[calc(100vh-4rem)] flex items-center justify-center px-4 py-8'
+      }
+    >
+      <div className="w-full max-w-md bg-zinc-950 border border-zinc-800 rounded-3xl p-8 shadow-2xl relative">
+        {onClose && (
+          <button
+            type="button"
+            onClick={onClose}
+            className="absolute top-5 right-5 p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
+            title="Fermer"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        )}
+
         <div className="text-center mb-6">
           <div className="flex justify-center mb-4">
             <Logo size="lg" />
