@@ -9,6 +9,8 @@ import {
   AlertCircle,
   Clock,
   Upload,
+  RefreshCw,
+  Video,
 } from 'lucide-react';
 
 interface VerificationModalProps {
@@ -34,11 +36,82 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
   // Media refs
   const selfie1InputRef = useRef<HTMLInputElement>(null);
   const selfie2InputRef = useRef<HTMLInputElement>(null);
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const cameraStreamRef = useRef<MediaStream | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [recordingSeconds, setRecordingSeconds] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+
+  // Stop camera tracks cleanly
+  const stopCamera = () => {
+    if (cameraStreamRef.current) {
+      cameraStreamRef.current.getTracks().forEach((track) => track.stop());
+      cameraStreamRef.current = null;
+    }
+    setIsCameraActive(false);
+  };
+
+  // Start live webcam stream
+  const startCamera = async () => {
+    setError(null);
+    try {
+      stopCamera();
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+      });
+      cameraStreamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.play();
+      }
+      setIsCameraActive(true);
+    } catch {
+      setIsCameraActive(false);
+    }
+  };
+
+  // Snap instant frame from live video
+  const captureLiveSelfie = async (selfieNumber: 1 | 2) => {
+    if (!videoRef.current || !isCameraActive) return;
+    setUploadingMedia(true);
+    setError(null);
+
+    try {
+      const video = videoRef.current;
+      const canvas = document.createElement('canvas');
+      canvas.width = video.videoWidth || 640;
+      canvas.height = video.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) throw new Error('Impossible de capturer la photo');
+
+      // Mirror horizontally for natural preview
+      ctx.translate(canvas.width, 0);
+      ctx.scale(-1, 1);
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, 'image/jpeg', 0.9),
+      );
+
+      if (!blob) throw new Error('Échec de la conversion image');
+
+      const res = await api.uploadFile(blob, 'verification');
+      if (selfieNumber === 1) {
+        setSelfie1Url(res.fileUrl);
+      } else {
+        setSelfie2Url(res.fileUrl);
+      }
+      stopCamera();
+    } catch (err: any) {
+      setError(err.message || 'Erreur lors de la capture du selfie');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
 
   const handleSelfieUpload = async (file: File, selfieNumber: 1 | 2) => {
     setUploadingMedia(true);
@@ -50,6 +123,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
       } else {
         setSelfie2Url(res.fileUrl);
       }
+      stopCamera();
     } catch (err: any) {
       setError(err.message || 'Erreur lors de l upload du selfie');
     } finally {
@@ -113,17 +187,30 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     };
 
     fetchInstructions();
+    return () => {
+      stopCamera();
+    };
   }, []);
 
-  // Timer effect
+  // When step changes, manage camera
+  useEffect(() => {
+    if (step === 1 && !selfie1Url) {
+      startCamera();
+    } else if (step === 2 && !selfie2Url) {
+      startCamera();
+    } else {
+      stopCamera();
+    }
+  }, [step, selfie1Url, selfie2Url]);
+
+  // Audio Timer effect
   useEffect(() => {
     let interval: any;
     if (isRecording) {
       interval = setInterval(() => {
         setRecordingSeconds((prev) => {
           if (prev >= 20) {
-            setIsRecording(false);
-            setAudioUrl('https://storage.example.com/audio/verification_recorded.mp3');
+            stopVoiceRecording();
             return 20;
           }
           return prev + 1;
@@ -142,10 +229,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         selfie1Instruction: instructions.selfie1Instruction,
         selfie2Url: selfie2Url || 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400',
         selfie2Instruction: instructions.selfie2Instruction,
-        audioUrl: audioUrl || 'https://storage.example.com/audio/sample_voice.mp3',
+        audioUrl: audioUrl || 'http://localhost:3001/api/v1/storage/files/verification/sample_voice.mp3',
         audioPhrase: instructions.voicePhrase,
       });
-      setStep(4); // Success screen
+      setStep(4);
     } catch (err: any) {
       setError(err.message || 'Échec de la soumission');
     } finally {
@@ -157,7 +244,10 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
       <div className="w-full max-w-lg bg-zinc-950 border border-brand-border rounded-3xl p-6 shadow-2xl relative">
         <button
-          onClick={onClose}
+          onClick={() => {
+            stopCamera();
+            onClose();
+          }}
           className="absolute top-5 right-5 p-1.5 text-zinc-400 hover:text-white rounded-full hover:bg-zinc-800 transition"
         >
           <X className="w-5 h-5" />
@@ -168,7 +258,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
             <ShieldCheck className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="font-bold text-base text-white">Vérification d Authenticité</h2>
+            <h2 className="font-bold text-base text-white">Vérification d’Authenticité</h2>
             <p className="text-xs text-zinc-400">Étape {step} sur 3 — Anti-faux profils</p>
           </div>
         </div>
@@ -182,12 +272,12 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
 
         {loading ? (
           <div className="py-12 flex justify-center">
-            <div className="w-6 h-6 border-2 border-brand-orange border-t-transparent rounded-full animate-spin" />
+            <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
           </div>
         ) : step === 1 ? (
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-center">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-brand-orange block mb-1">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-blue-400 block mb-1">
                 Instruction Selfie 1
               </span>
               <p className="font-semibold text-lg text-white">
@@ -195,7 +285,8 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               </p>
             </div>
 
-            <div className="aspect-video bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+            {/* Video Viewport / Captured Preview */}
+            <div className="aspect-[4/3] bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center relative overflow-hidden">
               <input
                 ref={selfie1InputRef}
                 type="file"
@@ -207,38 +298,74 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   if (file) handleSelfieUpload(file, 1);
                 }}
               />
+
               {selfie1Url ? (
-                <img src={selfie1Url} alt="Selfie 1" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <Camera className="w-10 h-10 text-zinc-500 mb-2" />
-                  <p className="text-xs text-zinc-400">Prenez votre selfie face caméra en suivant la consigne</p>
-                  <div className="flex items-center gap-2 mt-3">
+                <div className="w-full h-full relative">
+                  <img src={selfie1Url} alt="Selfie 1" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelfie1Url('');
+                      startCamera();
+                    }}
+                    className="absolute bottom-3 right-3 px-3 py-1 bg-black/70 hover:bg-black/90 backdrop-blur-md text-white rounded-full text-xs font-medium flex items-center gap-1 border border-white/20 transition"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Reprendre</span>
+                  </button>
+                </div>
+              ) : isCameraActive ? (
+                <div className="w-full h-full relative flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover -scale-x-100"
+                  />
+                  {/* Shutter Button */}
+                  <div className="absolute bottom-4 inset-x-0 flex justify-center">
                     <button
                       type="button"
                       disabled={uploadingMedia}
-                      onClick={() => selfie1InputRef.current?.click()}
-                      className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                      onClick={() => captureLiveSelfie(1)}
+                      className="w-14 h-14 rounded-full bg-white hover:bg-zinc-200 border-4 border-black/30 shadow-xl flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                      title="Prendre l'instantané"
                     >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{uploadingMedia ? 'Envoi...' : 'Prendre / Choisir selfie'}</span>
+                      <div className="w-10 h-10 rounded-full border-2 border-black/10 bg-blue-600" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-center">
+                  <Camera className="w-10 h-10 text-zinc-500 mx-auto mb-2" />
+                  <p className="text-xs text-zinc-400">Caméra non disponible ou autorisations refusées</p>
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => startCamera()}
+                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Activer caméra</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelfie1Url('https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=500')}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition border border-zinc-700"
+                      onClick={() => selfie1InputRef.current?.click()}
+                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition flex items-center gap-1.5 border border-zinc-700"
                     >
-                      Exemple Démo
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Fichier</span>
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
             <button
               disabled={!selfie1Url}
               onClick={() => setStep(2)}
-              className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold rounded-xl transition disabled:opacity-40"
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25 disabled:opacity-40"
             >
               Passer au selfie 2
             </button>
@@ -246,7 +373,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
         ) : step === 2 ? (
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800 text-center">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-brand-orange block mb-1">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-blue-400 block mb-1">
                 Instruction Selfie 2
               </span>
               <p className="font-semibold text-lg text-white">
@@ -254,7 +381,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
               </p>
             </div>
 
-            <div className="aspect-video bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center p-4 text-center relative overflow-hidden">
+            <div className="aspect-[4/3] bg-black rounded-2xl border border-dashed border-zinc-700 flex flex-col items-center justify-center relative overflow-hidden">
               <input
                 ref={selfie2InputRef}
                 type="file"
@@ -266,46 +393,84 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   if (file) handleSelfieUpload(file, 2);
                 }}
               />
+
               {selfie2Url ? (
-                <img src={selfie2Url} alt="Selfie 2" className="w-full h-full object-cover" />
-              ) : (
-                <>
-                  <Camera className="w-10 h-10 text-zinc-500 mb-2" />
-                  <p className="text-xs text-zinc-400">Effectuez le second geste demandé face caméra</p>
-                  <div className="flex items-center gap-2 mt-3">
+                <div className="w-full h-full relative">
+                  <img src={selfie2Url} alt="Selfie 2" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelfie2Url('');
+                      startCamera();
+                    }}
+                    className="absolute bottom-3 right-3 px-3 py-1 bg-black/70 hover:bg-black/90 backdrop-blur-md text-white rounded-full text-xs font-medium flex items-center gap-1 border border-white/20 transition"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    <span>Reprendre</span>
+                  </button>
+                </div>
+              ) : isCameraActive ? (
+                <div className="w-full h-full relative flex items-center justify-center">
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="w-full h-full object-cover -scale-x-100"
+                  />
+                  <div className="absolute bottom-4 inset-x-0 flex justify-center">
                     <button
                       type="button"
                       disabled={uploadingMedia}
-                      onClick={() => selfie2InputRef.current?.click()}
-                      className="px-4 py-1.5 bg-brand-orange hover:bg-brand-orange-hover text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                      onClick={() => captureLiveSelfie(2)}
+                      className="w-14 h-14 rounded-full bg-white hover:bg-zinc-200 border-4 border-black/30 shadow-xl flex items-center justify-center transition active:scale-95 disabled:opacity-50"
+                      title="Prendre l'instantané"
                     >
-                      <Upload className="w-3.5 h-3.5" />
-                      <span>{uploadingMedia ? 'Envoi...' : 'Prendre / Choisir selfie'}</span>
+                      <div className="w-10 h-10 rounded-full border-2 border-black/10 bg-blue-600" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-4 text-center">
+                  <Camera className="w-10 h-10 text-zinc-500 mx-auto mb-2" />
+                  <p className="text-xs text-zinc-400">Effectuez le second geste face à l'objectif</p>
+                  <div className="flex items-center justify-center gap-2 mt-3">
+                    <button
+                      type="button"
+                      onClick={() => startCamera()}
+                      className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 text-xs font-medium rounded-full text-white transition flex items-center gap-1.5"
+                    >
+                      <Video className="w-3.5 h-3.5" />
+                      <span>Activer caméra</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelfie2Url('https://images.unsplash.com/photo-1517841905240-472988babdf9?w=500')}
-                      className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition border border-zinc-700"
+                      onClick={() => selfie2InputRef.current?.click()}
+                      className="px-3.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-xs font-medium rounded-full text-zinc-300 transition flex items-center gap-1.5 border border-zinc-700"
                     >
-                      Exemple Démo
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>Fichier</span>
                     </button>
                   </div>
-                </>
+                </div>
               )}
             </div>
 
             <button
               disabled={!selfie2Url}
-              onClick={() => setStep(3)}
-              className="w-full py-3 bg-brand-orange hover:bg-brand-orange-hover text-white font-semibold rounded-xl transition disabled:opacity-40"
+              onClick={() => {
+                stopCamera();
+                setStep(3);
+              }}
+              className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition shadow-lg shadow-blue-500/25 disabled:opacity-40"
             >
-              Passer à l enregistrement vocal (20s)
+              Passer à l’enregistrement vocal (20s)
             </button>
           </div>
         ) : step === 3 ? (
           <div className="space-y-4">
             <div className="p-4 bg-zinc-900 rounded-2xl border border-zinc-800">
-              <span className="text-[10px] font-bold tracking-wider uppercase text-brand-orange block mb-1">
+              <span className="text-[10px] font-bold tracking-wider uppercase text-blue-400 block mb-1">
                 Phrase aléatoire à prononcer à haute voix
               </span>
               <p className="font-medium text-sm text-zinc-200 italic">
@@ -324,9 +489,9 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 }}
                 className={`w-16 h-16 rounded-full flex items-center justify-center cursor-pointer transition ${
                   isRecording
-                    ? 'bg-red-500 text-white animate-pulse'
+                    ? 'bg-rose-500 text-white animate-pulse shadow-lg shadow-rose-500/30'
                     : audioUrl
-                    ? 'bg-green-500/20 text-green-400 border border-green-500'
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500'
                     : 'bg-zinc-800 text-zinc-400 hover:text-white'
                 }`}
               >
@@ -345,7 +510,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                   ? 'Enregistrement en cours... Lisez la phrase ci-dessus distinctement.'
                   : audioUrl
                   ? 'Note vocale enregistrée avec succès.'
-                  : 'Cliquez sur le micro pour démarrer l enregistrement de 20 secondes'}
+                  : 'Cliquez sur le micro pour démarrer l’enregistrement'}
               </p>
             </div>
 
@@ -375,7 +540,7 @@ export const VerificationModal: React.FC<VerificationModalProps> = ({
                 onSuccess();
                 onClose();
               }}
-              className="px-6 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-medium rounded-full border border-zinc-700 transition"
+              className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-full shadow-lg shadow-blue-500/25 transition"
             >
               Fermer
             </button>
