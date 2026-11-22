@@ -1,0 +1,88 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4-alpine
+    container_name: annonymepro_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-annonymepro_prod}
+      POSTGRES_USER: ${DB_USER:-annonyme_admin}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-AnonymeProSecure2026!}
+    volumes:
+      - annonymepro_pgdata:/var/lib/postgresql/data
+    networks:
+      - annonymepro_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-annonyme_admin} -d ${DB_NAME:-annonymepro_prod}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: annonymepro_redis
+    restart: unless-stopped
+    command: redis-server --save "" --appendonly no
+    volumes:
+      - annonymepro_redisdata:/data
+    networks:
+      - annonymepro_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: annonymepro_api
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3070:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      BASE_URL: https://annonyme.pro
+      FRONTEND_URL: https://annonyme.pro
+      DATABASE_URL: postgresql://${DB_USER:-annonyme_admin}:${DB_PASSWORD:-AnonymeProSecure2026!}@postgres:5432/${DB_NAME:-annonymepro_prod}?schema=public
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-anonyme_pro_jwt_access_super_secret_dakar_2026}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-anonyme_pro_jwt_refresh_super_secret_dakar_2026}
+      JWT_ACCESS_EXPIRATION: 15m
+      JWT_REFRESH_EXPIRATION: 7d
+    volumes:
+      - annonymepro_uploads:/app/uploads
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - annonymepro_network
+
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: annonymepro_web
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3071:80"
+    depends_on:
+      - api
+    networks:
+      - annonymepro_network
+
+volumes:
+  annonymepro_pgdata:
+    name: annonymepro_pgdata
+  annonymepro_redisdata:
+    name: annonymepro_redisdata
+  annonymepro_uploads:
+    name: annonymepro_uploads
+
+networks:
+  annonymepro_network:
+    name: annonymepro_network
